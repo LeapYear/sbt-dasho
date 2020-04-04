@@ -1,0 +1,36 @@
+executor: sbt
+steps:
+  - checkout
+  - run:
+      name: Install pre-commit
+      command: curl https://pre-commit.com/install-local.py | python -
+  - restore_cache:
+      keys:
+        - v1-lint-{{ checksum "build.sbt" }}
+        - v1-lint-
+  - run:
+      command: |
+        cat /dev/null | sbt scalafmtAll
+        ~/bin/pre-commit run -va
+      environment:
+        SKIP: circleci-pack,circleci-validate,no-commit-to-branch,scalafmt
+  - run:
+      name: Verify no files were changed after running linting
+      command: |
+        DIFF="$(git --no-pager diff --name-only)"
+        if [[ -n "$DIFF" ]]; then
+          echo "Files were changed after litning. Run" 1>&2
+          echo "    make lint" 1>&2
+          echo "and commit your changes to fix this error" 1>&2
+          echo "Files changed:" 1>&2
+          echo "$DIFF" 1>&2
+          exit 1
+        fi
+  - run:
+      name: post-lint diff
+      command: git --no-pager diff
+      when: always
+  - save_cache:
+      key: v1-lint-{{ checksum "build.sbt" }}
+      paths:
+        - "~/.m2"

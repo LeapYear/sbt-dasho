@@ -1,0 +1,3 @@
+docker:
+  - image: circleci/circleci-cli:alpine
+resource_class: small
