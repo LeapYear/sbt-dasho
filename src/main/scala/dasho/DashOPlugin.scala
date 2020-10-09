@@ -5,7 +5,7 @@ package dasho
 
 import java.io.{BufferedWriter, File, FileWriter, IOException}
 
-import sbt.{AutoPlugin, Compile, Def, Keys, Plugins, PluginTrigger, Runtime, Setting}
+import sbt.{AutoPlugin, Compile, Def, Keys, PluginTrigger, Plugins, Runtime, Setting}
 import sbt.plugins.JvmPlugin
 
 import scala.sys.process.Process
@@ -50,15 +50,23 @@ object DashOPlugin extends AutoPlugin {
       classPaths)
     writeFile(configFile, pretty.format(config.toXml))
 
+    val jvm_location: String = {
+      val javaExe = if (System.getProperty("os.name").startsWith("Win")) "java.exe" else "java"
+      Seq(
+        System.getProperties.getProperty("java.home"),
+        "bin",
+        javaExe
+      ).mkString(File.separator)
+    }
+
     // Run the DashO protection
     log.info("Protecting using DashO")
     val options = Seq("-jar", dashOHome.value + "/DashOPro.jar", configFile)
     log.debug("DashO command:")
-    log.debug("java " + options.mkString(" "))
-    val exitCode = Process("java", options) ! log
+    log.debug(jvm_location + " " + options.mkString(" "))
+    val exitCode = Process(jvm_location, options) ! log
     if (exitCode != 0) sys.error(s"DashO failed with exit code [$exitCode]")
   }
-
   @throws[IOException]
   private def writeFile(canonicalFilename: String, text: String): Unit = {
     val file = new File(canonicalFilename)

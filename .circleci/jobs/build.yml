@@ -1,0 +1,24 @@
+executor: sbt
+steps:
+  - checkout
+  - run:
+      name: Install AWSCLI
+      command: |
+        apt-get update
+        apt-get install -y awscli
+  - run:
+      name: Setup DashO
+      command: .circleci/setup_dasho.sh
+  - restore_cache:
+      keys:
+        - v1-dependencies-{{ checksum "build.sbt" }}
+        - v1-dependencies-
+  - run:
+      name: Compile jar and run tests
+      command: cat /dev/null | sbt -v clean update compile package scripted
+  - save_cache:
+      key: v1-dependencies-{{ checksum "build.sbt" }}
+      paths:
+        - "~/.m2"
+  - store_artifacts:
+      path: target

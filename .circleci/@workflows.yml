@@ -1,0 +1,6 @@
+workflows:
+  build:
+    jobs:
+      - build
+      - lint
+      - check-circleci

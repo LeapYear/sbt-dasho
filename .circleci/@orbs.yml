@@ -1,0 +1,2 @@
+orbs:
+  circleci: circleci/circleci-cli@0.1.8

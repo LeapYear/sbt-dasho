@@ -1,0 +1,103 @@
+executors:
+    circleci-cli:
+        docker:
+            - image: circleci/circleci-cli:alpine
+        resource_class: small
+    sbt:
+        docker:
+            - image: mozilla/sbt:8u212_1.2.8
+        environment:
+            - JAVA_OPTS: -Xms4g -Xmx4g -XX:MaxMetaspaceSize=512M -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap
+        working_directory: ~/src
+jobs:
+    build:
+        executor: sbt
+        steps:
+            - checkout
+            - run:
+                command: |
+                    apt-get update
+                    apt-get install -y awscli
+                name: Install AWSCLI
+            - run:
+                command: .circleci/setup_dasho.sh
+                name: Setup DashO
+            - restore_cache:
+                keys:
+                    - v1-dependencies-{{ checksum "build.sbt" }}
+                    - v1-dependencies-
+            - run:
+                command: cat /dev/null | sbt -v clean update compile package scripted
+                name: Compile jar and run tests
+            - save_cache:
+                key: v1-dependencies-{{ checksum "build.sbt" }}
+                paths:
+                    - ~/.m2
+            - store_artifacts:
+                path: target
+    check-circleci:
+        executor: circleci-cli
+        steps:
+            - checkout
+            - run:
+                command: circleci config --skip-update-check pack .circleci/ > .circleci/config.yml
+                name: Pack CircleCI config
+            - run:
+                command: |
+                    DIFF="$(git --no-pager diff .circleci/config.yml)"
+                    if [[ -n "$DIFF" ]]; then
+                      echo ".circleci/config.yml was changed after packing. Run" 1>&2
+                      echo "    circleci config pack .circleci > .circleci/config.yml" 1>&2
+                      echo "and commit your changes to fix this error" 1>&2
+                      echo "Diff:" 1>&2
+                      echo "$DIFF" 1>&2
+                      exit 1
+                    fi
+                name: Verify CircleCI was already packed
+    lint:
+        executor: sbt
+        steps:
+            - checkout
+            - run:
+                command: curl https://pre-commit.com/install-local.py | python -
+                name: Install pre-commit
+            - restore_cache:
+                keys:
+                    - v1-lint-{{ checksum "build.sbt" }}
+                    - v1-lint-
+            - run:
+                command: |
+                    cat /dev/null | sbt scalafmtAll
+                    ~/bin/pre-commit run -va
+                environment:
+                    SKIP: circleci-pack,circleci-validate,no-commit-to-branch,scalafmt
+            - run:
+                command: |
+                    DIFF="$(git --no-pager diff --name-only)"
+                    if [[ -n "$DIFF" ]]; then
+                      echo "Files were changed after litning. Run" 1>&2
+                      echo "    make lint" 1>&2
+                      echo "and commit your changes to fix this error" 1>&2
+                      echo "Files changed:" 1>&2
+                      echo "$DIFF" 1>&2
+                      exit 1
+                    fi
+                name: Verify no files were changed after running linting
+            - run:
+                command: git --no-pager diff
+                name: post-lint diff
+                when: always
+            - save_cache:
+                key: v1-lint-{{ checksum "build.sbt" }}
+                paths:
+                    - ~/.m2
+orbs:
+    circleci: circleci/circleci-cli@0.1.8
+version: 2.1
+workflows:
+    build:
+        jobs:
+            - build
+            - lint
+            - check-circleci
+

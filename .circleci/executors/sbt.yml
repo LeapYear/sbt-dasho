@@ -1,0 +1,7 @@
+working_directory: ~/src
+docker:
+    # Java 8u212 + sbt 1.2.8
+    - image: mozilla/sbt:8u212_1.2.8
+environment:
+    # By default, Java8 doesn't recognize that it is running in a docker container.
+    - JAVA_OPTS: -Xms4g -Xmx4g -XX:MaxMetaspaceSize=512M -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap

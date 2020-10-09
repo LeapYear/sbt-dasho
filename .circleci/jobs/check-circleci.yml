@@ -1,0 +1,18 @@
+executor: circleci-cli
+steps:
+  - checkout
+  - run:
+      name: Pack CircleCI config
+      command: circleci config --skip-update-check pack .circleci/ > .circleci/config.yml
+  - run:
+      name: Verify CircleCI was already packed
+      command: |
+        DIFF="$(git --no-pager diff .circleci/config.yml)"
+        if [[ -n "$DIFF" ]]; then
+          echo ".circleci/config.yml was changed after packing. Run" 1>&2
+          echo "    circleci config pack .circleci > .circleci/config.yml" 1>&2
+          echo "and commit your changes to fix this error" 1>&2
+          echo "Diff:" 1>&2
+          echo "$DIFF" 1>&2
+          exit 1
+        fi
