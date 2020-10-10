@@ -24,7 +24,18 @@ package dasho
 import java.io.File
 
 import sbt.Keys.packageBin
-import sbt.{AutoPlugin, Compile, Def, Keys, PluginTrigger, Plugins, Runtime, Setting}
+import sbt.{
+  AutoPlugin,
+  Compile,
+  Def,
+  Keys,
+  MessageOnlyException,
+  PluginTrigger,
+  Plugins,
+  Runtime,
+  Setting,
+  file
+}
 import sbt.plugins.JvmPlugin
 
 import scala.sys.process.Process
@@ -37,7 +48,7 @@ object DashOPlugin extends AutoPlugin {
   import autoImport.{dashOHome, dashOVersion, protect}
 
   override lazy val projectSettings: Seq[Setting[_]] = Seq(
-    dashOHome := new File(sys.env("DASHO_HOME")),
+    dashOHome := sys.env.get("DASHO_HOME") map file,
     dashOVersion := "9.0.0",
     protect := Def.sequential(Compile / packageBin, dashOTask).value
   )
@@ -46,6 +57,8 @@ object DashOPlugin extends AutoPlugin {
 
   private def dashOTask = Def.task {
     val log = Keys.sLog.value
+    val dashOHomeSetting =
+      dashOHome.value.getOrElse(throw new MessageOnlyException("dashOHome is not set"))
 
     // Get classPaths for DashO to inspect
     val classPaths: Seq[File] = (Keys.fullClasspath in Runtime).value.files
@@ -67,7 +80,7 @@ object DashOPlugin extends AutoPlugin {
 
     // Run the DashO protection
     log.info("Protecting using DashO")
-    runDashOJar(configFile, new File(dashOHome.value + "/DashOPro.jar"), log)
+    runDashOJar(configFile, new File(dashOHomeSetting + "/DashOPro.jar"), log)
   }
 
   private def runDashOJar(configFile: File, dashOJar: File, log: sbt.util.Logger): Unit = {
