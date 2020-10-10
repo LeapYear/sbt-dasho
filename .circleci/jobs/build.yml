@@ -6,14 +6,16 @@ steps:
       command: .circleci/setup_dasho.sh
   - restore_cache:
       keys:
-        - v1-dependencies-{{ checksum "build.sbt" }}
-        - v1-dependencies-
+        - v2-dependencies-{{ checksum "build.sbt" }}
+        - v2-dependencies-
   - run:
       name: Compile jar and run tests
       command: cat /dev/null | sbt -v clean update headerCheck compile package scripted
   - save_cache:
-      key: v1-dependencies-{{ checksum "build.sbt" }}
+      key: v2-dependencies-{{ checksum "build.sbt" }}
       paths:
+        - "~/.ivy2/cache"
+        - "~/.sbt"
         - "~/.m2"
   - store_artifacts:
       path: target

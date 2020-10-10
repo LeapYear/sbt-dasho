@@ -6,8 +6,8 @@ steps:
       command: curl https://pre-commit.com/install-local.py | python3 -
   - restore_cache:
       keys:
-        - v1-lint-{{ checksum "build.sbt" }}
-        - v1-lint-
+        - v2-lint-{{ checksum "build.sbt" }}
+        - v2-lint-
   - run:
       command: |
         cat /dev/null | sbt scalafmtAll
@@ -31,6 +31,8 @@ steps:
       command: git --no-pager diff
       when: always
   - save_cache:
-      key: v1-lint-{{ checksum "build.sbt" }}
+      key: v2-lint-{{ checksum "build.sbt" }}
       paths:
+        - "~/.ivy2/cache"
+        - "~/.sbt"
         - "~/.m2"
