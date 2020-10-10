@@ -3,7 +3,7 @@ steps:
   - checkout
   - run:
       name: Install pre-commit
-      command: curl https://pre-commit.com/install-local.py | python -
+      command: curl https://pre-commit.com/install-local.py | python3 -
   - restore_cache:
       keys:
         - v1-lint-{{ checksum "build.sbt" }}

@@ -2,11 +2,6 @@ executor: sbt
 steps:
   - checkout
   - run:
-      name: Install AWSCLI
-      command: |
-        apt-get update
-        apt-get install -y awscli
-  - run:
       name: Setup DashO
       command: .circleci/setup_dasho.sh
   - restore_cache:
