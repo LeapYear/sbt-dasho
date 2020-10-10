@@ -33,7 +33,7 @@ By default, `dashOHome` corresponds to the `DASHO_HOME` environment variable.
 Next, build the jar and protect it using DashO
 
 ```
-sbt package protect
+sbt protect
 ```
 
 From the original jar (for example `root-0.1.jar`), this will create multiple files in the target directory:
@@ -55,14 +55,13 @@ pre-commit run -av
 
 Run the tests
 ```
-sbt scripted
+DASHO_HOME=/path/to/dasho sbt scripted
 ```
 
 Code formatting
 ```
 sbt scalafmtAll headerCreate headerCheck scalastyle
 ```
-
 
 ## macOS installation notes
 
@@ -75,7 +74,7 @@ pre-commit install
 jenv add $(/usr/libexec/java_home -v1.8)
 ```
 
-Run the tests
+The scripted test framework uses the java on your path, so you may need to run the tests with non-default java version.
 ```
-JAVA_HOME=$(/usr/libexec/java_home -v1.8) sbt scripted
+DASHO_HOME=/path/to/dasho JAVA_HOME=$(/usr/libexec/java_home -v1.8) sbt scripted
 ```
