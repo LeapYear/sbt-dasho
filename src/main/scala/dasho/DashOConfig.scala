@@ -21,9 +21,9 @@
 
 package dasho
 
-import java.io.File
+import java.io.{BufferedWriter, File, FileWriter}
 
-import scala.xml.Elem
+import scala.xml.{Elem, PrettyPrinter}
 
 /**
   * Configuration file for DashO
@@ -78,5 +78,16 @@ private final class DashOConfig(
 
   class PathElement(final val classPath: File) {
     def toXml: Elem = <pathelement location={classPath.getAbsolutePath} />
+  }
+
+  def write(path: File): Unit = {
+    val width = 250
+    val pretty = new PrettyPrinter(width, 2)
+    val out = new BufferedWriter(new FileWriter(path))
+    try {
+      out.write(pretty.format(toXml))
+    } finally {
+      out.close()
+    }
   }
 }

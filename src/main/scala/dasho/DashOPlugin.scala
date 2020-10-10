@@ -21,13 +21,13 @@
 
 package dasho
 
-import java.io.{BufferedWriter, File, FileWriter, IOException}
+import java.io.File
 
+import sbt.Keys.packageBin
 import sbt.{AutoPlugin, Compile, Def, Keys, PluginTrigger, Plugins, Runtime, Setting}
 import sbt.plugins.JvmPlugin
 
 import scala.sys.process.Process
-import scala.xml.PrettyPrinter
 
 /**
   * DashO plugin
@@ -37,14 +37,13 @@ object DashOPlugin extends AutoPlugin {
   import autoImport.{dashOHome, dashOVersion, protect}
 
   override lazy val projectSettings: Seq[Setting[_]] = Seq(
-    dashOHome := sys.env("DASHO_HOME"),
+    dashOHome := new File(sys.env("DASHO_HOME")),
     dashOVersion := "9.0.0",
-    protect := dashOTask.value
+    protect := Def.sequential(Compile / packageBin, dashOTask).value
   )
   override val trigger: PluginTrigger = noTrigger
   override val requires: Plugins = JvmPlugin
 
-  @throws[RuntimeException]
   private def dashOTask = Def.task {
     val log = Keys.sLog.value
 
@@ -54,24 +53,24 @@ object DashOPlugin extends AutoPlugin {
     // The location of the JAR and get the output names right.
     val inputArtifactPath = (Keys.artifactPath in Keys.packageBin in Compile).value
     val baseName = inputArtifactPath.getAbsolutePath.split("\\.(?=[^.]+$)").head
-    val outputArtifactPath = new File(baseName + "-protected.jar")
-    val mappingFile = new File(baseName + "-dashOMapping.txt")
-    val reportFile = new File(baseName + "-dashOReport.txt")
-    val configFile = baseName + ".dox"
+    val configFile = new File(baseName + ".dox")
 
     // Write DashO config
     log.info(s"Writing DashO config to $configFile")
-    val width = 250
-    val pretty = new PrettyPrinter(width, 2)
-    val config = new DashOConfig(
+    new DashOConfig(
       dashOVersion.value,
       inputArtifactPath,
-      outputArtifactPath,
-      mappingFile,
-      reportFile,
-      classPaths)
-    writeFile(configFile, pretty.format(config.toXml))
+      new File(baseName + "-protected.jar"),
+      new File(baseName + "-dashOMapping.txt"),
+      new File(baseName + "-dashOReport.txt"),
+      classPaths).write(configFile)
 
+    // Run the DashO protection
+    log.info("Protecting using DashO")
+    runDashOJar(configFile, new File(dashOHome.value + "/DashOPro.jar"), log)
+  }
+
+  private def runDashOJar(configFile: File, dashOJar: File, log: sbt.util.Logger): Unit = {
     val jvm_location: String = {
       val javaExe = if (System.getProperty("os.name").startsWith("Win")) "java.exe" else "java"
       Seq(
@@ -80,21 +79,11 @@ object DashOPlugin extends AutoPlugin {
         javaExe
       ).mkString(File.separator)
     }
-
-    // Run the DashO protection
-    log.info("Protecting using DashO")
-    val options = Seq("-jar", dashOHome.value + "/DashOPro.jar", configFile)
+    val options = Seq("-jar", dashOJar.toString, configFile.toString)
     log.debug("DashO command:")
     log.debug(jvm_location + " " + options.mkString(" "))
     val exitCode = Process(jvm_location, options) ! log
     if (exitCode != 0) sys.error(s"DashO failed with exit code [$exitCode]")
-  }
-  @throws[IOException]
-  private def writeFile(canonicalFilename: String, text: String): Unit = {
-    val file = new File(canonicalFilename)
-    val out = new BufferedWriter(new FileWriter(file))
-    out.write(text)
-    out.close()
   }
 
 }

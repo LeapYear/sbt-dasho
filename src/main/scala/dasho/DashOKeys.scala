@@ -21,6 +21,8 @@
 
 package dasho
 
+import java.io.File
+
 import sbt.{settingKey, taskKey}
 
 /**
@@ -28,7 +30,7 @@ import sbt.{settingKey, taskKey}
   */
 trait DashOKeys {
   // Settings
-  lazy val dashOHome = settingKey[String]("Location of DashO. Default DASHO_HOME")
+  lazy val dashOHome = settingKey[File]("Location of DashO. Default DASHO_HOME")
   lazy val dashOVersion = settingKey[String]("Version of DashO")
 
   // Tasks
