@@ -67,13 +67,14 @@ object DashOPlugin extends AutoPlugin {
     val inputArtifactPath = (Keys.artifactPath in Keys.packageBin in Compile).value
     val baseName = inputArtifactPath.getAbsolutePath.split("\\.(?=[^.]+$)").head
     val configFile = new File(baseName + ".dox")
+    val protectedJar = new File(baseName + "-protected.jar")
 
     // Write DashO config
     log.info(s"Writing DashO config to $configFile")
     new DashOConfig(
       dashOVersion.value,
       inputArtifactPath,
-      new File(baseName + "-protected.jar"),
+      protectedJar,
       new File(baseName + "-dashOMapping.txt"),
       new File(baseName + "-dashOReport.txt"),
       classPaths).write(configFile)
@@ -81,6 +82,7 @@ object DashOPlugin extends AutoPlugin {
     // Run the DashO protection
     log.info("Protecting using DashO")
     runDashOJar(configFile, new File(dashOHomeSetting + "/DashOPro.jar"), log)
+    protectedJar
   }
 
   private def runDashOJar(configFile: File, dashOJar: File, log: sbt.util.Logger): Unit = {

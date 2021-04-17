@@ -34,5 +34,5 @@ trait DashOKeys {
   lazy val dashOVersion = settingKey[String]("Version of DashO")
 
   // Tasks
-  lazy val protect = taskKey[Unit]("Protect jar using DashO")
+  lazy val protect = taskKey[File]("Protect jar using DashO")
 }
