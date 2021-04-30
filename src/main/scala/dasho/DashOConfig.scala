@@ -55,7 +55,9 @@ private final class DashOConfig(
         <jar path={outputJar.getAbsolutePath} />
       </output>
       <!-- third-party packages or jars that should also be analyzed by DashO -->
-      <classpath>{classPaths.map(new PathElement(_).toXml)}</classpath>
+      <classpath JDKHome={System.getProperty("java.home")} useJDKHome="true">
+          {classPaths.map(new PathElement(_).toXml)}
+      </classpath>
       <report path={reportFile.getAbsolutePath} />
       <!-- The removal section specifies granularity for class/method/field/metadata removal -->
       <removal classes="unused-non-public" members="unused" />
