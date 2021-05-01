@@ -57,7 +57,10 @@ private final class DashOConfig(
         <jar path={outputJar.getAbsolutePath} />
       </output>
       <!-- third-party packages or jars that should also be analyzed by DashO -->
-      <classpath JDKHome={jdkHome.orNull.getAbsolutePath} useJDKHome={jdkHome.nonEmpty.toString}>
+      <classpath
+        JDKHome={jdkHome.map(_.getAbsolutePath).orNull}
+        useJDKHome={jdkHome.nonEmpty.toString}
+      >
           {classPaths.map(new PathElement(_).toXml)}
       </classpath>
       <report path={reportFile.getAbsolutePath} />
