@@ -41,7 +41,9 @@ private final class DashOConfig(
     private val outputJar: File,
     private val mappingFile: File,
     private val reportFile: File,
-    private val classPaths: Seq[File]) {
+    private val classPaths: Seq[File],
+    private val jdkHome: Option[File]
+) {
 
   def toXml: Elem =
     <dasho version={version}>
@@ -55,7 +57,9 @@ private final class DashOConfig(
         <jar path={outputJar.getAbsolutePath} />
       </output>
       <!-- third-party packages or jars that should also be analyzed by DashO -->
-      <classpath>{classPaths.map(new PathElement(_).toXml)}</classpath>
+      <classpath JDKHome={jdkHome.orNull.getAbsolutePath} useJDKHome={jdkHome.nonEmpty.toString}>
+          {classPaths.map(new PathElement(_).toXml)}
+      </classpath>
       <report path={reportFile.getAbsolutePath} />
       <!-- The removal section specifies granularity for class/method/field/metadata removal -->
       <removal classes="unused-non-public" members="unused" />

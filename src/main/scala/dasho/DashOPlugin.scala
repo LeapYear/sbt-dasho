@@ -22,7 +22,6 @@
 package dasho
 
 import java.io.File
-
 import sbt.Keys.packageBin
 import sbt.{
   AutoPlugin,
@@ -45,10 +44,11 @@ import scala.sys.process.Process
   */
 object DashOPlugin extends AutoPlugin {
   object autoImport extends DashOKeys
-  import autoImport.{dashOHome, dashOVersion, protect}
+  import autoImport.{dashOHome, dashOVersion, protect, jdkHome}
 
   override lazy val projectSettings: Seq[Setting[_]] = Seq(
     dashOHome := sys.env.get("DASHO_HOME") map file,
+    jdkHome := sys.env.get("JDK_HOME") map file,
     dashOVersion := "9.0.0",
     protect := Def.sequential(Compile / packageBin, dashOTask).value
   )
@@ -77,7 +77,8 @@ object DashOPlugin extends AutoPlugin {
       protectedJar,
       new File(baseName + "-dashOMapping.txt"),
       new File(baseName + "-dashOReport.txt"),
-      classPaths).write(configFile)
+      classPaths,
+      jdkHome.value).write(configFile)
 
     // Run the DashO protection
     log.info("Protecting using DashO")
