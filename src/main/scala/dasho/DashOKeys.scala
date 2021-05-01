@@ -32,6 +32,7 @@ trait DashOKeys {
   // Settings
   lazy val dashOHome = settingKey[Option[File]]("Location of DashO. Default DASHO_HOME")
   lazy val dashOVersion = settingKey[String]("Version of DashO")
+  lazy val jdkHome = settingKey[Option[File]]("Location of the JDK")
 
   // Tasks
   lazy val protect = taskKey[File]("Protect jar using DashO")
